@@ -1,1 +1,19 @@
+use company_notes_db;
+
+db.task_feedback.insertMany([
+  { employee_id: 1, employee_name: "Suresh Reddy", note: "Fixed bugs quickly", scanned_doc: "scan1.pdf" },
+  { employee_id: 2, employee_name: "Lakshmi Devi", note: "Handled onboarding smoothly", scanned_doc: "scan2.pdf" },
+  { employee_id: 3, employee_name: "Ravi Kumar", note: "Shows great DevOps skills" },
+  { employee_id: 4, employee_name: "Priya Naidu", note: "Created good campaigns but missed deadline" },
+  { employee_id: 5, employee_name: "Keerthi Reddy", note: "Designed a clean frontend layout", scanned_doc: "scan3.png" }
+]);
+
+// Indexes
+db.task_feedback.createIndex({ employee_id: 1 });
+db.task_feedback.createIndex({ employee_name: 1 });
+db.task_feedback.createIndex({ note: "text" });
+
+// Example queries
+db.task_feedback.find({ employee_id: 1 });
+db.task_feedback.find({ note: { $text: { $search: "onboarding" } } });
 
