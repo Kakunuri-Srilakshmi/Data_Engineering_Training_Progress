@@ -1,1 +1,37 @@
+use personal_receipts;
+
+db.createCollection('receipts');
+
+db.receipts.insertMany([
+  {
+    user_id: 1,
+    receipt_date: ISODate('2025-09-01T10:15:00Z'),
+    total_amount: 1520.50,
+    currency: 'INR',
+    items: [ { name: 'Rice', qty: 1, price: 600 }, { name: 'Milk', qty: 2, price: 80 } ],
+    merchant: 'BigMart',
+    notes: 'Weekly groceries',
+    scanned_receipt: { file_name: 'bigmart-0901.jpg', mime_type: 'image/jpeg' },
+    metadata: { tags: ['groceries','staples'] },
+    created_at: new Date()
+  },
+  {
+    user_id: 1,
+    receipt_date: ISODate('2025-09-03T12:00:00Z'),
+    total_amount: 2999.00,
+    currency: 'INR',
+    items: [ { name: 'Electricity Bill', qty: 1, price: 2999 } ],
+    merchant: 'UtilityCo',
+    notes: 'Electricity bill for Aug-2025',
+    scanned_receipt: { file_name: 'util-Aug2025.pdf', mime_type: 'application/pdf' },
+    metadata: { tags: ['utilities'] },
+    created_at: new Date()
+  }
+]);
+
+-- Indexes
+db.receipts.createIndex( { user_id: 1, receipt_date: -1 } );
+db.receipts.createIndex( { merchant: 1 } );
+db.receipts.createIndex( { 'metadata.tags': 1 } );
+db.receipts.createIndex( { notes: 'text', 'items.name': 'text', merchant: 'text' } );
 
