@@ -1,5 +1,5 @@
-from csv_handler import load_products, save_products
-from json_handler import load_orders, save_orders
+import csv
+import json
 from product_module import Product
 from customer_module import Customer
 from order_module import Order
@@ -8,6 +8,40 @@ import reports
 PRODUCT_FILE = "products.csv"
 ORDER_FILE = "orders.json"
 
+#  CSV Handling
+def load_products(filename):
+    products = {}
+    with open(filename, newline="") as file:
+        reader = csv.DictReader(file)
+        for row in reader:
+            prod = Product(row['id'], row['name'], row['category'], row['price'], row['stock'])
+            products[int(row['id'])] = prod
+    return products
+
+def save_products(filename, products):
+    with open(filename, "w", newline="") as file:
+        fieldnames = ["id", "name", "category", "price", "stock"]
+        writer = csv.DictWriter(file, fieldnames=fieldnames)
+        writer.writeheader()
+        for p in products.values():
+            writer.writerow({
+                "id": p.id,
+                "name": p.name,
+                "category": p.category,
+                "price": p.price,
+                "stock": p.stock
+            })
+
+# JSON Handling 
+def load_orders(filename):
+    with open(filename, "r") as file:
+        return json.load(file)
+
+def save_orders(filename, orders):
+    with open(filename, "w") as file:
+        json.dump(orders, file, indent=2)
+
+# Order Processing
 def process_orders(products):
     raw_orders = load_orders(ORDER_FILE)
     orders = []
@@ -24,6 +58,7 @@ def process_orders(products):
         orders.append(order)
     return orders
 
+# Menu 
 def menu():
     products = load_products(PRODUCT_FILE)
     orders = process_orders(products)
