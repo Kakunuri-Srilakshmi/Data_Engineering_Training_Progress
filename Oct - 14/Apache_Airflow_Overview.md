@@ -1,7 +1,7 @@
 
 # 🌬️ Apache Airflow
 
-##  What is Airflow?
+##  What is Airflow
 
 **Apache Airflow** is an **open-source workflow automation and scheduling platform** developed by **Airbnb** and later contributed to the **Apache Software Foundation**.
 It allows you to create, schedule, and monitor **data workflows** — also known as **pipelines** — using **Python code**.
@@ -13,7 +13,7 @@ In Airflow, each workflow is represented as a **DAG (Directed Acyclic Graph)**, 
 
 
 
-## Why Should We Use Airflow?
+## Importance of Apache Airflow
 
 We use Airflow to **automate repetitive tasks** and **manage complex data pipelines** easily.
 Instead of manually running scripts every day, Airflow ensures your workflows:
@@ -69,5 +69,6 @@ With Airflow:
 * Airflow automatically runs it every morning.
 * If a step fails, it retries and alerts you.
 * You can see logs and success/failure status in the web UI.
+
 
 
