@@ -8,6 +8,7 @@
 ### **1. What is Apache Airflow and why is it used?**
 
 Apache Airflow is an **open-source platform** used to **design, schedule, and monitor workflows** (data pipelines).
+
 It allows you to define workflows as **code in Python**, making them easy to maintain and version-control.
 
 **Why it is used:**
@@ -27,7 +28,7 @@ It is the **backbone of Airflow**, representing your entire workflow.
 * **Acyclic:** There are **no loops or cycles** — a task cannot depend on itself directly or indirectly.
 * **Graph:** It’s a **collection of nodes (tasks)** connected by edges (dependencies).
 
-**Note**
+
 A DAG defines **how tasks depend on each other and in what order** they should run.
 
 
@@ -227,5 +228,6 @@ extract_data >> transform_data >> load_data
 
 Here, `extract_data` runs first, followed by `transform_data`, and finally `load_data`.
 Airflow’s **scheduler** respects these dependencies and runs tasks **in sequence or parallel** as defined.
+
 
 
