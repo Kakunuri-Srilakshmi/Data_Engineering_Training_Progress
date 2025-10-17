@@ -1,6 +1,6 @@
 
 
-# 🌀 **Apache Airflow – Theoretical Assessment**
+#  **Apache Airflow – Theoretical Assessment**
 
 
 ## **Section A – Basics**
@@ -228,6 +228,7 @@ extract_data >> transform_data >> load_data
 
 Here, `extract_data` runs first, followed by `transform_data`, and finally `load_data`.
 Airflow’s **scheduler** respects these dependencies and runs tasks **in sequence or parallel** as defined.
+
 
 
 
