@@ -1,8 +1,9 @@
+-- create database
 CREATE DATABASE company_db;
 USE company_db;
 
 -- Employees table
-CREATE TABLE employees (
+CREATE TABLE  employees (
   employee_id INT AUTO_INCREMENT PRIMARY KEY,
   first_name VARCHAR(60) NOT NULL,
   last_name VARCHAR(60),
@@ -15,7 +16,7 @@ CREATE TABLE employees (
 );
 
 -- Attendance table
-CREATE TABLE attendance (
+CREATE TABLE  attendance (
   attendance_id INT AUTO_INCREMENT PRIMARY KEY,
   employee_id INT NOT NULL,
   attendance_date DATE NOT NULL,
@@ -27,7 +28,7 @@ CREATE TABLE attendance (
 );
 
 -- Tasks table
-CREATE TABLE tasks (
+CREATE TABLE  tasks (
   task_id INT AUTO_INCREMENT PRIMARY KEY,
   employee_id INT NOT NULL,
   title VARCHAR(200) NOT NULL,
@@ -42,7 +43,7 @@ CREATE TABLE tasks (
   FOREIGN KEY (employee_id) REFERENCES employees(employee_id)
 );
 
--- Insert employees details
+-- Insert employees
 INSERT INTO employees (first_name,last_name,department,designation,email,hired_date) VALUES
 ('Suresh','Reddy','Engineering','Software Engineer','suresh.reddy@example.com','2023-06-01'),
 ('Lakshmi','Devi','HR','HR Executive','lakshmi.devi@example.com','2022-09-15'),
@@ -60,7 +61,7 @@ INSERT INTO employees (first_name,last_name,department,designation,email,hired_d
 ('Kranthi','S','Engineering','Intern','kranthi.s@example.com','2025-02-01'),
 ('Padmavathi','R','HR','Recruiter','padmavathi.r@example.com','2020-10-20');
 
--- One-week attendance sample
+-- attendance
 INSERT INTO attendance (employee_id, attendance_date, clock_in, clock_out, note) VALUES
 (1,'2025-09-11','2025-09-11 09:05:00','2025-09-11 18:10:00','On time'),
 (1,'2025-09-12','2025-09-12 09:15:00','2025-09-12 18:20:00','Slightly late'),
@@ -81,11 +82,16 @@ INSERT INTO attendance (employee_id, attendance_date, clock_in, clock_out, note)
 (14,'2025-09-11','2025-09-11 09:08:00','2025-09-11 18:00:00','On time'),
 (15,'2025-09-11','2025-09-11 09:05:00','2025-09-11 18:10:00','Good');
 
--- task
+-- tasks
 INSERT INTO tasks (employee_id,title,description,assigned_date,due_date,completed_date,estimated_hours,actual_hours,status)
 VALUES (1,'Fix login bug','Investigate and fix login failure on mobile','2025-09-11','2025-09-20','2025-09-12',4.0,4.5,'completed');
 
--- Stored Procedure to calculate total working hours per employee
+-- Indexes for fast querying
+CREATE INDEX idx_emp_dept ON employees(department);
+CREATE INDEX idx_att_emp ON attendance(employee_id);
+CREATE INDEX idx_tasks_emp ON tasks(employee_id);
+
+-- Stored Procedure: total working hours for an employee in a month
 DELIMITER //
 CREATE PROCEDURE total_hours(IN empId INT, IN y INT, IN m INT)
 BEGIN
@@ -99,6 +105,6 @@ BEGIN
 END //
 DELIMITER ;
 
--- Example call
-CALL total_hours(1,2025,9);
+-- Example call:
+-- CALL total_hours(1,2025,9);
 
