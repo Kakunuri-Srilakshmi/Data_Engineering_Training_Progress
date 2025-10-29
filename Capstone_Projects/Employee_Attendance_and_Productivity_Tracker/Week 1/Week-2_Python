@@ -1,0 +1,104 @@
+import pandas as pd
+import numpy as np
+from sqlalchemy import create_engine
+import urllib.parse
+
+# MySQL credentials
+MYSQL_USER = "root"
+MYSQL_PASSWORD = "Lucky@3002"
+MYSQL_HOST = "localhost"
+MYSQL_PORT = 3306
+MYSQL_DB = "company_db"
+
+# Encode password in case it has special characters
+MYSQL_PASSWORD_ENCODED = urllib.parse.quote_plus(MYSQL_PASSWORD)
+
+# Create engine
+engine = create_engine(
+    f"mysql+pymysql://{MYSQL_USER}:{MYSQL_PASSWORD_ENCODED}@{MYSQL_HOST}:{MYSQL_PORT}/{MYSQL_DB}"
+)
+
+# Test connection
+try:
+    with engine.connect() as conn:
+        print(" Connected to MySQL successfully!")
+except Exception as e:
+    print("Connection failed:", e)
+    exit(1)
+
+# Read tables
+attendance_q = """
+SELECT attendance_id, employee_id, attendance_date, clock_in, clock_out, note
+FROM attendance;
+"""
+tasks_q = """
+SELECT task_id, employee_id, assigned_date, completed_date, status
+FROM tasks;
+"""
+employees_q = """
+SELECT employee_id, first_name, last_name, department, designation
+FROM employees;
+"""
+
+employees = pd.read_sql(employees_q, engine)
+attendance = pd.read_sql(attendance_q, engine, parse_dates=['attendance_date','clock_in','clock_out'])
+tasks = pd.read_sql(tasks_q, engine, parse_dates=['assigned_date','completed_date'])
+
+# Clean Data
+attendance['clock_in'] = pd.to_datetime(attendance['clock_in'], errors='coerce')
+attendance['clock_out'] = pd.to_datetime(attendance['clock_out'], errors='coerce')
+attendance = attendance.dropna(subset=['clock_in','clock_out']).copy()
+
+# Save CSVs
+attendance.to_csv("attendance.csv", index=False)
+tasks.to_csv("tasks.csv", index=False)
+employees.to_csv("employees.csv", index=False)
+
+# Compute Work Hours
+attendance['workhours'] = (attendance['clock_out'] - attendance['clock_in']).dt.total_seconds() / 3600.0
+attendance.loc[attendance['workhours'] < 0, 'workhours'] = np.nan
+
+attendance['breaktime'] = np.where(attendance['workhours'] > 8, 1.0, 0.5)
+attendance['net_workhours'] = attendance['workhours'] - attendance['breaktime']
+attendance['net_workhours'] = attendance['net_workhours'].clip(lower=0.0)
+
+# Tasks Completed
+tasks_completed = (
+    tasks[tasks['status'].str.lower() == 'completed']
+    .groupby('employee_id')
+    .size()
+    .rename('tasks_completed')
+    .reset_index()
+)
+
+df = attendance.merge(tasks_completed, how='left', on='employee_id')
+df['tasks_completed'] = df['tasks_completed'].fillna(0).astype(int)
+
+# Productivity Score
+df['productivity_score'] = df['tasks_completed'] / df['net_workhours'].replace({0: np.nan})
+df['productivity_score'] = df['productivity_score'].fillna(0)
+
+# Save cleaned CSV
+df.to_csv('cleaned_attendance_tasks.csv', index=False)
+print(" Cleaned data saved to 'cleaned_attendance_tasks.csv'")
+
+# Employee Summary
+summary = df.groupby('employee_id').agg(
+    avg_net_workhours=('net_workhours', 'mean'),
+    avg_productivity=('productivity_score', 'mean'),
+    days_present=('attendance_date', 'nunique')
+).reset_index()
+
+print("\n=== Employee Productivity Summary ===")
+print(summary)
+
+top = summary.loc[summary['avg_productivity'].idxmax()]
+bottom = summary.loc[summary['avg_productivity'].idxmin()]
+
+print(f"\nTop Performer: employee_id={top['employee_id']}, avg_productivity={top['avg_productivity']:.2f}")
+print(f"Bottom Performer: employee_id={bottom['employee_id']}, avg_productivity={bottom['avg_productivity']:.2f}")
+
+# Frequent absentees
+absentees = summary.sort_values('days_present').head(10)
+print("\n=== Frequent Absentees (fewest present days) ===")
+print(absentees)
