@@ -1,0 +1,79 @@
+from pyspark.sql import SparkSession
+from pyspark.sql.functions import col, when, sum as _sum, avg, count
+from pyspark.sql.types import DoubleType, TimestampType
+import pandas as pd
+
+# Spark session
+spark = SparkSession.builder.appName("AttendanceAnalysis").getOrCreate()
+
+# Load CSV files
+attendance_df = spark.read.option("header", True).option("inferSchema", True).csv("/content/attendance.csv")
+tasks_df = spark.read.option("header", True).option("inferSchema", True).csv("/content/tasks.csv")
+employees_df = spark.read.option("header", True).option("inferSchema", True).csv("/content/employees.csv")
+
+# Convert clock_in and clock_out to timestamp
+attendance_df = attendance_df.withColumn("clock_in", col("clock_in").cast(TimestampType()))
+attendance_df = attendance_df.withColumn("clock_out", col("clock_out").cast(TimestampType()))
+
+# Compute work hours
+attendance_df = attendance_df.withColumn(
+    "workhours",
+    (col("clock_out").cast("double") - col("clock_in").cast("double")) / 3600
+)
+attendance_df = attendance_df.withColumn("breaktime", when(col("workhours") > 8, 1.0).otherwise(0.5))
+attendance_df = attendance_df.withColumn("net_workhours", (col("workhours") - col("breaktime")).cast(DoubleType()))
+attendance_df = attendance_df.withColumn("net_workhours", when(col("net_workhours") < 0, 0).otherwise(col("net_workhours")))
+
+# Compute tasks completed per employee
+tasks_completed_df = tasks_df.filter(col("status").rlike("(?i)completed")) \
+    .groupBy("employee_id") \
+    .count() \
+    .withColumnRenamed("count", "tasks_completed")
+
+# Merge attendance with tasks
+df = attendance_df.join(tasks_completed_df, on="employee_id", how="left")
+df = df.withColumn("tasks_completed", when(col("tasks_completed").isNull(), 0).otherwise(col("tasks_completed")))
+
+# Productivity score
+df = df.withColumn("productivity_score", col("tasks_completed") / col("net_workhours"))
+df = df.withColumn("productivity_score", when(col("productivity_score").isNull(), 0).otherwise(col("productivity_score")))
+
+# Late logins
+late_logins_df = df.filter(col("clock_in").substr(12,5) > "09:30")
+
+# Group by department to get avg workhours and productivity
+if "department" in employees_df.columns:
+    df = df.join(employees_df.select("employee_id", "department"), on="employee_id", how="left")
+    dept_summary = df.groupBy("department").agg(
+        avg("net_workhours").alias("avg_net_workhours"),
+        avg("productivity_score").alias("avg_productivity"),
+        count("employee_id").alias("total_employees")
+    )
+    print("=== Department Summary ===")
+    dept_summary.show(truncate=False)
+
+# Employee summary: top and bottom performers
+emp_summary = df.groupBy("employee_id").agg(
+    avg("net_workhours").alias("avg_net_workhours"),
+    avg("productivity_score").alias("avg_productivity"),
+    count("attendance_id").alias("days_present")
+)
+
+print("=== Employee Productivity Summary ===")
+emp_summary.show(truncate=False)
+
+top = emp_summary.orderBy(col("avg_productivity").desc()).limit(1)
+bottom = emp_summary.orderBy(col("avg_productivity").asc()).limit(1)
+print("=== Top Performer ===")
+top.show(truncate=False)
+print("=== Bottom Performer ===")
+bottom.show(truncate=False)
+
+# Frequent absentees (fewest days present)
+absentees = emp_summary.orderBy(col("days_present").asc()).limit(10)
+print("=== Frequent Absentees ===")
+absentees.show(truncate=False)
+
+# Late logins
+print("=== Late Logins (after 9:30 AM) ===")
+late_logins_df.select("employee_id","attendance_date","clock_in").show(truncate=False)
