@@ -1,0 +1,22 @@
+import pandas as pd
+import numpy as np
+
+# Load data from CSV
+df = pd.read_csv('expenses.csv')
+
+# Clean and standardize data
+df['amount'] = df['amount'].replace('[\$,]', '', regex=True).astype(float)
+df['date'] = pd.to_datetime(df['date'])
+df['month'] = df['date'].dt.to_period('M')
+
+# Monthly totals by category
+monthly_expense = df.groupby(['month', 'category'])['amount'].sum().unstack().fillna(0)
+
+# Monthly total and average using NumPy
+monthly_total = df.groupby('month')['amount'].sum()
+monthly_avg = np.mean(monthly_total)
+
+# Display results
+print("Monthly Expense Breakdown:\n", monthly_expense)
+print("\nMonthly Totals:\n", monthly_total)
+print("\nOverall Average Monthly Expense:", monthly_avg)
