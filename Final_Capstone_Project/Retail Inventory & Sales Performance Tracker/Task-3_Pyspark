@@ -1,0 +1,82 @@
+# Import required libraries
+from pyspark.sql import SparkSession
+from pyspark.sql.functions import col, sum as _sum, avg, desc, when
+
+# Create Spark session
+spark = SparkSession.builder.appName("Retail Insights with PySpark").getOrCreate()
+
+# File paths
+sales_path = "/content/sales_data (1).csv"
+inventory_path = "/content/inventory_data.csv"
+
+# Load CSV files
+sales_df = spark.read.csv(sales_path, header=True, inferSchema=True)
+inventory_df = spark.read.csv(inventory_path, header=True, inferSchema=True)
+
+print("Sales Data:")
+sales_df.show(5)
+
+print("Inventory Data:")
+inventory_df.show(5)
+
+# Add simulated region and category columns for grouping
+sales_df = sales_df.withColumn("region_code", (col("sale_id") % 2))
+inventory_df = inventory_df.withColumn("category_code", (col("inventory_id") % 2))
+
+# Convert numeric codes to readable names
+sales_df = sales_df.withColumn(
+    "region",
+    when(col("region_code") == 0, "South").otherwise("North")
+)
+
+inventory_df = inventory_df.withColumn(
+    "category",
+    when(col("category_code") == 0, "Electronics").otherwise("Accessories")
+)
+
+# Total sales by product
+total_sales = sales_df.groupBy("product_name").agg(_sum("total_amount").alias("Total_Sales"))
+print("Total Sales by Product:")
+total_sales.show()
+
+# Average sales amount
+avg_sales = sales_df.agg(avg("total_amount").alias("Average_Sales"))
+print("Average Sales Across All Products:")
+avg_sales.show()
+
+# Join sales and inventory data
+sales_inventory_join = sales_df.join(inventory_df, on="product_name", how="inner")
+print("Joined Sales & Inventory Data:")
+sales_inventory_join.show(5)
+
+# Identify low-stock (<30) and high-sales (>50000)
+low_stock_high_sales = sales_inventory_join.filter(
+    (col("quantity") < 30) & (col("total_amount") > 50000)
+).select("product_name", "quantity", "total_amount")
+print("Low-stock High-sales Products:")
+low_stock_high_sales.show()
+
+# Top 3 products by total sales
+top_products = total_sales.orderBy(desc("Total_Sales")).limit(3)
+print("Top 3 Products by Sales:")
+top_products.show()
+
+# Category-wise sales by region
+region_category_sales = sales_inventory_join.groupBy("region", "category").agg(
+    _sum("total_amount").alias("Total_Sales")
+)
+print("Category-wise Sales by Region:")
+region_category_sales.show()
+
+# Export results as CSV and Parquet
+total_sales.coalesce(1).write.mode("overwrite").csv("/content/total_sales_by_product.csv", header=True)
+region_category_sales.coalesce(1).write.mode("overwrite").csv("/content/category_sales_by_region.csv", header=True)
+sales_inventory_join.coalesce(1).write.mode("overwrite").parquet("/content/sales_inventory_join.parquet")
+
+print("Data processing and export completed successfully.")
+print("Output files generated:")
+print("- total_sales_by_product.csv")
+print("- category_sales_by_region.csv")
+print("- sales_inventory_join.parquet")
+
+spark.stop()
