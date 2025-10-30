@@ -1,0 +1,74 @@
+# Import required libraries
+import pandas as pd
+import numpy as np
+
+# Load sales and inventory data from CSV files
+sales_data = pd.read_csv('sales_data.csv')
+inventory_data = pd.read_csv('inventory_data.csv')
+
+# Clean missing values and format date/time columns
+sales_data.fillna(0, inplace=True)
+inventory_data.fillna(0, inplace=True)
+
+sales_data['sale_date'] = pd.to_datetime(sales_data['sale_date'])
+inventory_data['restock_date'] = pd.to_datetime(inventory_data['restock_date'])
+
+# Use NumPy to calculate monthly sales and inventory turnover
+sales_data['total_sale_value'] = np.multiply(sales_data['quantity_sold'], sales_data['unit_price'])
+sales_data['month'] = sales_data['sale_date'].dt.to_period('M')
+
+monthly_sales = sales_data.groupby('month').agg(
+    total_sales=('total_sale_value', 'sum'),
+    total_quantity=('quantity_sold', 'sum')
+).reset_index()
+
+inventory_turnover = (
+    sales_data.groupby('product_id')['quantity_sold'].sum() /
+    inventory_data.set_index('product_id')['stock_quantity']
+).reset_index(name='inventory_turnover')
+
+# Merge sales with inventory for full product performance info
+product_sales = pd.merge(
+    sales_data.groupby('product_id').agg(total_sales=('total_sale_value', 'sum')).reset_index(),
+    inventory_data,
+    on='product_id',
+    how='left'
+)
+
+# Identify top and underperforming products
+top_selling = product_sales.sort_values(by='total_sales', ascending=False).head(3)
+underperforming = product_sales.sort_values(by='total_sales', ascending=True).head(3)
+
+# Combine all results into summary files
+sales_performance_summary = {
+    'Monthly Sales Summary': monthly_sales,
+    'Inventory Turnover': inventory_turnover,
+    'Top Selling Products': top_selling,
+    'Underperforming Products': underperforming
+}
+
+# Save output reports as CSV files
+monthly_sales.to_csv('monthly_sales_report.csv', index=False)
+product_sales.to_csv('product_sales_report.csv', index=False)
+inventory_turnover.to_csv('sales_performance_summary.csv', index=False)
+
+# Print NumPy calculation outputs
+print("\nMonthly Sales (calculated using NumPy):")
+print(monthly_sales)
+
+print("\nInventory Turnover (calculated using NumPy):")
+print(inventory_turnover)
+
+print("\nTop Selling Products:")
+print(top_selling[['product_id', 'total_sales']])
+
+print("\nUnderperforming Products:")
+print(underperforming[['product_id', 'total_sales']])
+
+print("\nData processing completed successfully.")
+print("CSV files generated:")
+print("- sales_data.csv")
+print("- inventory_data.csv")
+print("- monthly_sales_report.csv")
+print("- product_sales_report.csv")
+print("- sales_performance_summary.csv")
