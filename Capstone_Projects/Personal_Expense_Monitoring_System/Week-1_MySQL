@@ -1,0 +1,128 @@
+-- Create Database
+
+CREATE DATABASE expense_monitoring;
+USE expense_monitoring;
+
+-- Table users
+
+CREATE TABLE users (
+  user_id INT PRIMARY KEY,
+  user_name VARCHAR(50),
+  email VARCHAR(50),
+  phone VARCHAR(15),
+  join_date DATE,
+  membership VARCHAR(20),
+  city VARCHAR(30),
+  country VARCHAR(30)
+);
+
+-- Insert Users
+INSERT INTO users (user_id, user_name, email, phone, join_date, membership, city, country) VALUES
+(1, 'Lakshmi', 'lakshmi@example.com', '9876543210', '2024-01-10', 'Premium', 'Nellore', 'India'),
+(2, 'Ravi Kumar', 'ravi@example.com', '9876501234', '2024-02-12', 'Regular', 'Chennai', 'India'),
+(3, 'Priya Sharma', 'priya@example.com', '9876512345', '2024-03-15', 'Regular', 'Hyderabad', 'India'),
+(4, 'Manoj Reddy', 'manoj@example.com', '9876523456', '2024-04-18', 'Premium', 'Bangalore', 'India'),
+(5, 'Anjali Mehta', 'anjali@example.com', '9876534567', '2024-05-20', 'Regular', 'Pune', 'India'),
+(6, 'Kiran Raj', 'kiran@example.com', '9876545678', '2024-06-10', 'Premium', 'Mumbai', 'India'),
+(7, 'Divya Patel', 'divya@example.com', '9876556789', '2024-07-22', 'Regular', 'Ahmedabad', 'India'),
+(8, 'Suresh Babu', 'suresh@example.com', '9876567890', '2024-08-14', 'Regular', 'Vijayawada', 'India'),
+(9, 'Neha Gupta', 'neha@example.com', '9876578901', '2024-09-01', 'Premium', 'Delhi', 'India'),
+(10, 'Arjun Das', 'arjun@example.com', '9876589012', '2024-09-20', 'Regular', 'Kolkata', 'India'),
+(11, 'Ritika Jain', 'ritika@example.com', '9876590123', '2024-10-05', 'Regular', 'Bhopal', 'India'),
+(12, 'Vikram Singh', 'vikram@example.com', '9876601234', '2024-10-10', 'Premium', 'Lucknow', 'India'),
+(13, 'Meena Rao', 'meena@example.com', '9876612345', '2024-10-15', 'Regular', 'Coimbatore', 'India'),
+(14, 'Sanjay Iyer', 'sanjay@example.com', '9876623456', '2024-10-18', 'Regular', 'Madurai', 'India'),
+(15, 'Harini Devi', 'harini@example.com', '9876634567', '2024-10-20', 'Premium', 'Mysuru', 'India');
+
+-- Table categories
+
+CREATE TABLE categories (
+  category_id INT PRIMARY KEY,
+  category_name VARCHAR(50),
+  description VARCHAR(100),
+  type VARCHAR(20),
+  monthly_limit DECIMAL(10,2)
+);
+
+-- Insert Categories
+INSERT INTO categories (category_id, category_name, description, type, monthly_limit) VALUES
+(1, 'Food', 'Groceries, dining, and snacks', 'Essential', 5000.00),
+(2, 'Transport', 'Fuel, public transport, and maintenance', 'Essential', 3000.00),
+(3, 'Utilities', 'Electricity, water, and internet bills', 'Essential', 4000.00),
+(4, 'Entertainment', 'Movies, subscriptions, and outings', 'Leisure', 2500.00),
+(5, 'Health', 'Medicines, checkups, and fitness', 'Essential', 3500.00),
+(6, 'Shopping', 'Clothes and accessories', 'Leisure', 4000.00),
+(7, 'Education', 'Books, courses, and tuition', 'Essential', 6000.00),
+(8, 'Travel', 'Trips, hotels, and flights', 'Leisure', 8000.00),
+(9, 'Insurance', 'Health and vehicle insurance premiums', 'Essential', 5000.00),
+(10, 'Others', 'Miscellaneous expenses', 'General', 2000.00);
+
+-- Table expenses
+
+CREATE TABLE expenses (
+  expense_id INT PRIMARY KEY AUTO_INCREMENT,
+  user_id INT,
+  category_id INT,
+  expense_date DATE,
+  amount DECIMAL(10,2),
+  description VARCHAR(100),
+  FOREIGN KEY (user_id) REFERENCES users(user_id),
+  FOREIGN KEY (category_id) REFERENCES categories(category_id)
+);
+
+-- Insert Expenses
+INSERT INTO expenses (user_id, category_id, expense_date, amount, description) VALUES
+(1, 1, '2024-10-01', 2500.00, 'Groceries for the week'),
+(1, 3, '2024-10-05', 1200.00, 'Electricity Bill'),
+(2, 2, '2024-10-06', 800.00, 'Petrol'),
+(3, 4, '2024-10-10', 600.00, 'Movie night'),
+(4, 1, '2024-10-11', 300.00, 'Snacks'),
+(5, 5, '2024-10-15', 1000.00, 'Medicines'),
+(6, 7, '2024-10-16', 2000.00, 'Online course fee'),
+(7, 8, '2024-10-17', 7000.00, 'Trip to Goa'),
+(8, 9, '2024-10-18', 4500.00, 'Car insurance premium'),
+(9, 2, '2024-10-19', 1500.00, 'Fuel refill'),
+(10, 6, '2024-10-20', 3200.00, 'New shoes'),
+(11, 3, '2024-10-21', 900.00, 'Wi-Fi bill'),
+(12, 4, '2024-10-22', 400.00, 'OTT subscription'),
+(13, 10, '2024-10-23', 600.00, 'Miscellaneous'),
+(14, 1, '2024-10-24', 1800.00, 'Dinner with friends'),
+(15, 5, '2024-10-25', 2500.00, 'Health checkup');
+
+-- CRUD Operations Examples
+
+-- Create
+INSERT INTO expenses (user_id, category_id, expense_date, amount, description)
+VALUES (1, 2, '2024-10-26', 300.00, 'Auto fare');
+
+-- Read
+SELECT * FROM expenses;
+
+-- Update
+UPDATE expenses
+SET amount = 280.00
+WHERE expense_id = 16;
+
+-- Delete
+DELETE FROM expenses
+WHERE expense_id = 15;
+
+-- Stored Procedure
+
+DELIMITER //
+CREATE PROCEDURE GetMonthlyExpenseSummary(IN month_num INT, IN year_num INT)
+BEGIN
+  SELECT 
+    u.user_name,
+    c.category_name,
+    SUM(e.amount) AS total_spent
+  FROM expenses e
+  JOIN users u ON e.user_id = u.user_id
+  JOIN categories c ON e.category_id = c.category_id
+  WHERE MONTH(e.expense_date) = month_num AND YEAR(e.expense_date) = year_num
+  GROUP BY u.user_name, c.category_name;
+END //
+DELIMITER ;
+
+-- To call:
+-- CALL GetMonthlyExpenseSummary(10, 2024);
