@@ -1,0 +1,42 @@
+from pyspark.sql import SparkSession
+from pyspark.sql.functions import col, month, year, sum as spark_sum, avg, when, round
+
+# Initialize Spark Session
+spark = SparkSession.builder.appName("AzureDatabricks_ETL").getOrCreate()
+
+# Load CSV files from DBFS 
+users_df = spark.read.csv("/FileStore/tables/users.csv", header=True, inferSchema=True)
+expenses_df = spark.read.csv("/FileStore/tables/expenses.csv", header=True, inferSchema=True)
+
+# Data Cleaning
+expenses_df = expenses_df.withColumn("amount", col("amount").cast("float"))
+expenses_df = expenses_df.withColumn("date", col("date").cast("date"))
+expenses_df = expenses_df.withColumn("month", month(col("date")))
+expenses_df = expenses_df.withColumn("year", year(col("date")))
+
+# Combine User and Expense Data
+combined_df = expenses_df.join(users_df, on="user_id", how="left")
+
+# Create Summary Table – Monthly Spend & Average
+summary_df = combined_df.groupBy("user_id", "year", "month").agg(
+    round(spark_sum("amount"), 2).alias("monthly_spend"),
+    round(avg("amount"), 2).alias("avg_transaction")
+)
+
+# Add Savings (assume salary = 5000 per user per month)
+summary_df = summary_df.withColumn("salary", col("monthly_spend") * 0 + 5000)
+summary_df = summary_df.withColumn("savings", col("salary") - col("monthly_spend"))
+
+# Add Alerts (if spend > 80% of salary)
+summary_df = summary_df.withColumn(
+    "alert",
+    when(col("monthly_spend") > 0.8 * col("salary"), "High Spending").otherwise("Normal")
+)
+
+# Save Output as Delta and CSV
+summary_df.write.format("delta").mode("overwrite").save("/FileStore/tables/summary_delta")
+summary_df.write.csv("/FileStore/tables/summary_csv", header=True, mode="overwrite")
+
+# Display Final Output
+print("=== Monthly Expense Summary ===")
+display(summary_df)
