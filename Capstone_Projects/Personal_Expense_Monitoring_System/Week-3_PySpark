@@ -1,0 +1,36 @@
+from pyspark.sql import SparkSession
+from pyspark.sql.functions import col, to_date, month, year, avg, sum as _sum
+
+# Initialize Spark Session
+spark = SparkSession.builder.appName("ExpenseTransactionVolumeAnalysis").getOrCreate()
+
+# Load Expense Data
+df = spark.read.csv("expenses.csv", header=True, inferSchema=True)
+
+# Convert expense_date and extract month, year
+df = df.withColumn("expense_date", to_date(col("expense_date"))) \
+       .withColumn("month", month(col("expense_date"))) \
+       .withColumn("year", year(col("expense_date")))
+
+# Group by user to calculate total monthly spend
+monthly_spend = df.groupBy("user_id", "year", "month") \
+                  .agg(_sum("amount").alias("total_monthly_spend"))
+
+# Compute average spend per user
+user_avg_spend = monthly_spend.groupBy("user_id") \
+                              .agg(avg("total_monthly_spend").alias("average_spend"))
+
+# Join monthly spend and average spend data
+joined_df = monthly_spend.join(user_avg_spend, on="user_id", how="left")
+
+# Detect unusual spikes (spend > 1.5 × average)
+anomalies = joined_df.filter(col("total_monthly_spend") > 1.5 * col("average_spend")) \
+                     .select("user_id", "year", "month", "total_monthly_spend", "average_spend")
+
+# Show users with potential unusual spending
+print("=== Users with Potential Unusual Spending ===")
+anomalies.show(truncate=False)
+
+### To upload file 
+from google.colab import files
+uploaded = files.upload()
