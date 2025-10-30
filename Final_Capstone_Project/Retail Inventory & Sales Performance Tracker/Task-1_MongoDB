@@ -1,0 +1,55 @@
+use retail_feedback_db;
+switched to db retail_feedback_db
+// Insert feedback documents
+db.feedback.insertMany([
+  {
+    product_id: 1,
+    customer_name: "Ravi Kumar",
+    feedback_text: "Laptop performance is excellent, battery life could be better.",
+    rating: 4,
+    date: ISODate("2025-10-11")
+  },
+  {
+    product_id: 2,
+    customer_name: "Priya Singh",
+    feedback_text: "Great smartphone, value for money.",
+    rating: 5,
+    date: ISODate("2025-10-12")
+  },
+  {
+    product_id: 3,
+    customer_name: "John Mathew",
+    feedback_text: "Sound quality is average, expected better bass.",
+    rating: 3,
+    date: ISODate("2025-10-09")
+  },
+  {
+    product_id: 5,
+    customer_name: "Amit Sharma",
+    feedback_text: "Refrigerator is spacious and energy efficient.",
+    rating: 5,
+    date: ISODate("2025-10-10")
+  },
+  {
+    product_id: 10,
+    customer_name: "Suresh Babu",
+    feedback_text: "AC cooling is fast and efficient.",
+    rating: 4,
+    date: ISODate("2025-10-12")
+  }
+]);
+{
+  acknowledged: true,
+  insertedIds: {
+    '0': ObjectId('69030a4614adc224991635d5'),
+    '1': ObjectId('69030a4614adc224991635d6'),
+    '2': ObjectId('69030a4614adc224991635d7'),
+    '3': ObjectId('69030a4614adc224991635d8'),
+    '4': ObjectId('69030a4614adc224991635d9')
+  }
+}
+// Create Index for quick search by product_id
+db.feedback.createIndex({ product_id: 1 });
+product_id_1
+// Fetch feedback for a specific product
+db.feedback.find({ product_id: 2 });
