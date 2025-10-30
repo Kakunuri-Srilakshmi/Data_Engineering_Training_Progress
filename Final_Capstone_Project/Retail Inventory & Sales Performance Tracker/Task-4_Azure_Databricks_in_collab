@@ -1,0 +1,78 @@
+# Install PySpark 
+!pip install pyspark
+
+# Import required libraries
+from pyspark.sql import SparkSession
+from pyspark.sql.functions import col, when, sum as _sum, desc
+
+# Create a Spark session
+spark = SparkSession.builder.appName("ETL_Pipeline_Simulation").getOrCreate()
+
+# Upload cleaned sales and inventory data 
+sales_path = "/content/sales_data (1).csv"
+inventory_path = "/content/inventory_data.csv"
+
+# Read input CSV files into PySpark DataFrames
+sales_df = spark.read.csv(sales_path, header=True, inferSchema=True)
+inventory_df = spark.read.csv(inventory_path, header=True, inferSchema=True)
+
+# Display data
+print("Sales Data Sample:")
+sales_df.show(5)
+
+print("Inventory Data Sample:")
+inventory_df.show(5)
+
+# Simulating ETL Steps
+
+# E = Extract
+print("Step 1: Extract Phase Completed (Files Loaded)")
+
+# T = Transform
+# Add region and category columns for analysis (simulated)
+sales_df = sales_df.withColumn("region", when(col("sale_id") % 2 == 0, "North").otherwise("South"))
+inventory_df = inventory_df.withColumn("category", when(col("inventory_id") % 2 == 0, "Accessories").otherwise("Electronics"))
+
+print("Step 2: Transform Phase Completed (Added region & category)")
+
+# L = Load
+# Join both datasets on product_name
+etl_df = sales_df.join(inventory_df, on="product_name", how="inner")
+
+# Save joined data to CSV
+etl_df.write.mode("overwrite").csv("/content/etl_output_joined.csv", header=True)
+print("Step 3: Load Phase Completed (Saved joined data as CSV)")
+
+# Analysis and Queries 
+
+# Calculate total sales per product
+total_sales = sales_df.groupBy("product_name").agg(_sum("total_amount").alias("Total_Sales"))
+
+# Top 5 best-selling products
+top5_products = total_sales.orderBy(desc("Total_Sales")).limit(5)
+print("Top 5 Best-Selling Products:")
+top5_products.show()
+
+# Save ETL outputs as CSV and Parquet
+total_sales.write.mode("overwrite").csv("/content/etl_output_sales.csv", header=True)
+total_sales.write.mode("overwrite").parquet("/content/etl_output_sales.parquet")
+print("ETL Outputs Saved as CSV and Parquet")
+
+# Run SQL-style query (Databricks Simulation) ---
+etl_df.createOrReplaceTempView("retail_data")
+
+sql_result = spark.sql("""
+SELECT product_name, SUM(total_amount) AS Total_Sales
+FROM retail_data
+GROUP BY product_name
+ORDER BY Total_Sales DESC
+LIMIT 5
+""")
+
+print("SQL Query Result (Top 5 Products by Sales):")
+sql_result.show()
+
+# Stop Spark session
+spark.stop()
+
+print("ETL Pipeline Execution Completed Successfully!")
