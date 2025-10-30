@@ -1,0 +1,253 @@
+use expense_monitoring;
+switched to db expense_monitoring
+db.createCollection("receipts");
+{ ok: 1 }
+db.receipts.insertMany([
+  {
+    receipt_id: 1,
+    user_id: 1,
+    receipt_date: "2024-10-01",
+    category: "Food",
+    amount: 2500.00,
+    description: "Weekly groceries from local market",
+    receipt_image: "base64_or_image_link_1",
+    notes: "Purchased vegetables, fruits, and snacks"
+  },
+  {
+    receipt_id: 2,
+    user_id: 2,
+    receipt_date: "2024-10-05",
+    category: "Transport",
+    amount: 800.00,
+    description: "Petrol refill at HP station",
+    receipt_image: "base64_or_image_link_2",
+    notes: "Used for daily commute"
+  },
+  {
+    receipt_id: 3,
+    user_id: 3,
+    receipt_date: "2024-10-10",
+    category: "Entertainment",
+    amount: 600.00,
+    description: "Movie night at INOX",
+    receipt_image: "base64_or_image_link_3",
+    notes: "Watched new release with family"
+  },
+  {
+    receipt_id: 4,
+    user_id: 4,
+    receipt_date: "2024-10-12",
+    category: "Utilities",
+    amount: 1200.00,
+    description: "Electricity bill payment",
+    receipt_image: "base64_or_image_link_4",
+    notes: "Paid via online portal"
+  },
+  {
+    receipt_id: 5,
+    user_id: 5,
+    receipt_date: "2024-10-15",
+    category: "Health",
+    amount: 950.00,
+    description: "Medical check-up at city clinic",
+    receipt_image: "base64_or_image_link_5",
+    notes: "Routine health check"
+  },
+  {
+    receipt_id: 6,
+    user_id: 6,
+    receipt_date: "2024-10-18",
+    category: "Food",
+    amount: 450.00,
+    description: "Snacks and coffee with friends",
+    receipt_image: "base64_or_image_link_6",
+    notes: "Evening hangout"
+  },
+  {
+    receipt_id: 7,
+    user_id: 7,
+    receipt_date: "2024-10-20",
+    category: "Utilities",
+    amount: 900.00,
+    description: "Internet bill payment",
+    receipt_image: "base64_or_image_link_7",
+    notes: "Paid JioFiber monthly bill"
+  },
+  {
+    receipt_id: 8,
+    user_id: 8,
+    receipt_date: "2024-10-22",
+    category: "Transport",
+    amount: 500.00,
+    description: "Monthly bus pass renewal",
+    receipt_image: "base64_or_image_link_8",
+    notes: "Used for college commute"
+  },
+  {
+    receipt_id: 9,
+    user_id: 9,
+    receipt_date: "2024-10-23",
+    category: "Entertainment",
+    amount: 400.00,
+    description: "OTT subscription renewal",
+    receipt_image: "base64_or_image_link_9",
+    notes: "Amazon Prime monthly plan"
+  },
+  {
+    receipt_id: 10,
+    user_id: 10,
+    receipt_date: "2024-10-25",
+    category: "Health",
+    amount: 1100.00,
+    description: "Purchased medicines",
+    receipt_image: "base64_or_image_link_10",
+    notes: "For seasonal cold"
+  }
+]);
+{
+  acknowledged: true,
+  insertedIds: {
+    '0': ObjectId('69020b706f6636dd2b2646a7'),
+    '1': ObjectId('69020b706f6636dd2b2646a8'),
+    '2': ObjectId('69020b706f6636dd2b2646a9'),
+    '3': ObjectId('69020b706f6636dd2b2646aa'),
+    '4': ObjectId('69020b706f6636dd2b2646ab'),
+    '5': ObjectId('69020b706f6636dd2b2646ac'),
+    '6': ObjectId('69020b706f6636dd2b2646ad'),
+    '7': ObjectId('69020b706f6636dd2b2646ae'),
+    '8': ObjectId('69020b706f6636dd2b2646af'),
+    '9': ObjectId('69020b706f6636dd2b2646b0')
+  }
+}
+// Index to quickly find all receipts of a specific user
+db.receipts.createIndex({ user_id: 1 });
+
+
+user_id_1
+// Index to quickly search receipts by date
+db.receipts.createIndex({ receipt_date: 1 });
+receipt_date_1
+
+// Compound index for combined search (user + category)
+db.receipts.createIndex({ user_id: 1, category: 1 });
+user_id_1_category_1
+// Find all receipts for a specific user
+db.receipts.find({ user_id: 1 });
+
+// Find receipts by category
+db.receipts.find({ category: "Food" });
+
+// Find all receipts within a date range
+db.receipts.find({
+  receipt_date: { $gte: "2024-10-01", $lte: "2024-10-31" }
+});
+{
+  _id: ObjectId('69020b706f6636dd2b2646a7'),
+  receipt_id: 1,
+  user_id: 1,
+  receipt_date: '2024-10-01',
+  category: 'Food',
+  amount: 2500,
+  description: 'Weekly groceries from local market',
+  receipt_image: 'base64_or_image_link_1',
+  notes: 'Purchased vegetables, fruits, and snacks'
+}
+{
+  _id: ObjectId('69020b706f6636dd2b2646a8'),
+  receipt_id: 2,
+  user_id: 2,
+  receipt_date: '2024-10-05',
+  category: 'Transport',
+  amount: 800,
+  description: 'Petrol refill at HP station',
+  receipt_image: 'base64_or_image_link_2',
+  notes: 'Used for daily commute'
+}
+{
+  _id: ObjectId('69020b706f6636dd2b2646a9'),
+  receipt_id: 3,
+  user_id: 3,
+  receipt_date: '2024-10-10',
+  category: 'Entertainment',
+  amount: 600,
+  description: 'Movie night at INOX',
+  receipt_image: 'base64_or_image_link_3',
+  notes: 'Watched new release with family'
+}
+{
+  _id: ObjectId('69020b706f6636dd2b2646aa'),
+  receipt_id: 4,
+  user_id: 4,
+  receipt_date: '2024-10-12',
+  category: 'Utilities',
+  amount: 1200,
+  description: 'Electricity bill payment',
+  receipt_image: 'base64_or_image_link_4',
+  notes: 'Paid via online portal'
+}
+{
+  _id: ObjectId('69020b706f6636dd2b2646ab'),
+  receipt_id: 5,
+  user_id: 5,
+  receipt_date: '2024-10-15',
+  category: 'Health',
+  amount: 950,
+  description: 'Medical check-up at city clinic',
+  receipt_image: 'base64_or_image_link_5',
+  notes: 'Routine health check'
+}
+{
+  _id: ObjectId('69020b706f6636dd2b2646ac'),
+  receipt_id: 6,
+  user_id: 6,
+  receipt_date: '2024-10-18',
+  category: 'Food',
+  amount: 450,
+  description: 'Snacks and coffee with friends',
+  receipt_image: 'base64_or_image_link_6',
+  notes: 'Evening hangout'
+}
+{
+  _id: ObjectId('69020b706f6636dd2b2646ad'),
+  receipt_id: 7,
+  user_id: 7,
+  receipt_date: '2024-10-20',
+  category: 'Utilities',
+  amount: 900,
+  description: 'Internet bill payment',
+  receipt_image: 'base64_or_image_link_7',
+  notes: 'Paid JioFiber monthly bill'
+}
+{
+  _id: ObjectId('69020b706f6636dd2b2646ae'),
+  receipt_id: 8,
+  user_id: 8,
+  receipt_date: '2024-10-22',
+  category: 'Transport',
+  amount: 500,
+  description: 'Monthly bus pass renewal',
+  receipt_image: 'base64_or_image_link_8',
+  notes: 'Used for college commute'
+}
+{
+  _id: ObjectId('69020b706f6636dd2b2646af'),
+  receipt_id: 9,
+  user_id: 9,
+  receipt_date: '2024-10-23',
+  category: 'Entertainment',
+  amount: 400,
+  description: 'OTT subscription renewal',
+  receipt_image: 'base64_or_image_link_9',
+  notes: 'Amazon Prime monthly plan'
+}
+{
+  _id: ObjectId('69020b706f6636dd2b2646b0'),
+  receipt_id: 10,
+  user_id: 10,
+  receipt_date: '2024-10-25',
+  category: 'Health',
+  amount: 1100,
+  description: 'Purchased medicines',
+  receipt_image: 'base64_or_image_link_10',
+  notes: 'For seasonal cold'
+}
